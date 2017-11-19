@@ -1,14 +1,12 @@
 #include <main.h>
+#include <network.h>
 #include <structs.h>
 #include <movement.h>
 
-#include <inttypes.h>
-#include <math.h>
-#include <stdbool.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 bool handle_event(const SDL_Event, input_condition *const);
-level create_level(void);
 
 int main(const int argc, const char *const *const argv) {
   // initializing SDL
@@ -71,7 +69,7 @@ int main(const int argc, const char *const *const argv) {
   character_rectangle.w = CHARACTER_WIDTH;
   character_rectangle.h = CHARACTER_HEIGHT;
 
-  level current_level = create_level();
+  level current_level = ask_level();
 
   // moving to the start position
   character_rectangle.x = current_level.start_x;
@@ -90,7 +88,7 @@ int main(const int argc, const char *const *const argv) {
   while (!condition.close) {
     // processing events
     for (SDL_Event event; SDL_PollEvent(&event);) {
-      if (!handle_event(event, &condition)) continue;
+      handle_event(event, &condition);
     }
     calculate_position(condition, &character_rectangle);
     check_bounds(current_level, &character_rectangle);
@@ -136,8 +134,10 @@ bool handle_event(const SDL_Event event, input_condition *const condition) {
         case SDL_SCANCODE_LEFT:
           condition->left = true;
           return true;
+        default:
+          return false;
       }
-      return true;
+      break;
     case SDL_KEYUP:
       switch (event.key.keysym.scancode) {
         case SDL_SCANCODE_W:
@@ -156,23 +156,12 @@ bool handle_event(const SDL_Event event, input_condition *const condition) {
         case SDL_SCANCODE_LEFT:
           condition->left = false;
           return true;
+        default:
+          return false;
       }
-      return true;
+      break;
+    default:
+      return false;
   }
-  return false;
-}
-
-level create_level(void) {
-  level lvl;
-  lvl.start_x = 0;
-  lvl.start_y = 0;
-  lvl.limits_size = 1;
-  lvl.limits = calloc(lvl.limits_size, sizeof(limit));
-  lvl.limits[0].up = 0;
-  lvl.limits[0].left = 0;
-  lvl.limits[0].down = WINDOW_HEIGHT;
-  lvl.limits[0].right = WINDOW_WIDTH;
-  const limit current = lvl.limits[0];
-  return lvl;
 }
 
