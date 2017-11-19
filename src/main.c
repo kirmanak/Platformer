@@ -1,13 +1,14 @@
-#include <params.h>
+#include <main.h>
+#include <structs.h>
+#include <movement.h>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_video.h>
-
+#include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
+bool handle_event(const SDL_Event, input_condition *const);
+level create_level(void);
 
 int main(const int argc, const char *const *const argv) {
   // initializing SDL
@@ -70,94 +71,29 @@ int main(const int argc, const char *const *const argv) {
   character_rectangle.w = CHARACTER_WIDTH;
   character_rectangle.h = CHARACTER_HEIGHT;
 
-  // moving to the center
-  double character_x = (WINDOW_WIDTH - character_rectangle.w) / 2;
-  double character_y = (WINDOW_HEIGHT - character_rectangle.h) / 2;
+  level current_level = create_level();
 
-  // sprite moving speed
-  double character_x_velocity = 0;
-  double character_y_velocity = 0;
+  // moving to the start position
+  character_rectangle.x = current_level.start_x;
+  character_rectangle.y = current_level.start_y;
+
+  input_condition condition;
 
   // key togglers
-  bool up = false;
-  bool down = false;
-  bool right = false;
-  bool left = false;
+  condition.up = false;
+  condition.down = false;
+  condition.right = false;
+  condition.left = false;
+  condition.close = false;
 
   // main loop
-  bool close_requested = false;
-  while (!close_requested) {
+  while (!condition.close) {
     // processing events
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-      switch (event.type) {
-        case SDL_QUIT:
-          close_requested = true;
-          break;
-        case SDL_KEYDOWN:
-          switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_W:
-            case SDL_SCANCODE_UP:
-              up = true;
-              break;
-            case SDL_SCANCODE_S:
-            case SDL_SCANCODE_DOWN:
-              down = true;
-              break;
-            case SDL_SCANCODE_D:
-            case SDL_SCANCODE_RIGHT:
-              right = true;
-              break;
-            case SDL_SCANCODE_A:
-            case SDL_SCANCODE_LEFT:
-              left = true;
-              break;
-          }
-          break;
-        case SDL_KEYUP:
-          switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_W:
-            case SDL_SCANCODE_UP:
-              up = false;
-              break;
-            case SDL_SCANCODE_S:
-            case SDL_SCANCODE_DOWN:
-              down = false;
-              break;
-            case SDL_SCANCODE_D:
-            case SDL_SCANCODE_RIGHT:
-              right = false;
-              break;
-            case SDL_SCANCODE_A:
-            case SDL_SCANCODE_LEFT:
-              left = false;
-              break;
-          }
-          break;
-      }
+    for (SDL_Event event; SDL_PollEvent(&event);) {
+      if (!handle_event(event, &condition)) continue;
     }
-    // calculating velocity
-    character_x_velocity = character_y_velocity = 0;
-    if (up && !down) character_y_velocity = -CHARACTER_SPEED;
-    if (down && !up) character_y_velocity = CHARACTER_SPEED;
-    if (left && !right) character_x_velocity = -CHARACTER_SPEED;
-    if (right && !left) character_x_velocity = CHARACTER_SPEED;
-
-    // updating position
-    character_x += character_x_velocity / 60;
-    character_y += character_y_velocity / 60;
-
-    // detection bounds
-    if (character_x <= 0) character_x = 0;
-    if (character_y <= 0) character_y = 0;
-    if (character_x >= WINDOW_WIDTH - character_rectangle.w)
-      character_x = WINDOW_WIDTH - character_rectangle.w;
-    if (character_y >= WINDOW_HEIGHT - character_rectangle.h)
-      character_y = WINDOW_HEIGHT - character_rectangle.h;
-
-    // setting position in the struct
-    character_rectangle.y = (int)character_y;
-    character_rectangle.x = (int)character_x;
+    calculate_position(condition, &character_rectangle);
+    check_bounds(current_level, &character_rectangle);
 
     // clear the window
     SDL_RenderClear(renderer);
@@ -165,15 +101,78 @@ int main(const int argc, const char *const *const argv) {
     // draw the image
     SDL_RenderCopy(renderer, character_texture, NULL, &character_rectangle);
     SDL_RenderPresent(renderer);
-
-    // wait 1/60th of a second
-    SDL_Delay(1000 / 60);
+    // wait 1/FPS of a second
+    SDL_Delay((double) 1000 / FPS);
   }
 
   // closing program
+  free(current_level.limits);
   SDL_DestroyTexture(character_texture);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   SDL_Quit();
   return 0;
 }
+
+bool handle_event(const SDL_Event event, input_condition *const condition) {
+  switch (event.type) {
+    case SDL_QUIT:
+      condition->close = true;
+      return true;
+    case SDL_KEYDOWN:
+      switch (event.key.keysym.scancode) {
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP:
+          condition->up = true;
+          return true;
+        case SDL_SCANCODE_S: case SDL_SCANCODE_DOWN:
+          condition->down = true;
+          return true;
+        case SDL_SCANCODE_D:
+        case SDL_SCANCODE_RIGHT:
+          condition->right = true;
+          return true;
+        case SDL_SCANCODE_A:
+        case SDL_SCANCODE_LEFT:
+          condition->left = true;
+          return true;
+      }
+      return true;
+    case SDL_KEYUP:
+      switch (event.key.keysym.scancode) {
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP:
+          condition->up = false;
+          return true;
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN:
+          condition->down = false;
+          return true;
+        case SDL_SCANCODE_D:
+        case SDL_SCANCODE_RIGHT:
+          condition->right = false;
+          return true;
+        case SDL_SCANCODE_A:
+        case SDL_SCANCODE_LEFT:
+          condition->left = false;
+          return true;
+      }
+      return true;
+  }
+  return false;
+}
+
+level create_level(void) {
+  level lvl;
+  lvl.start_x = 0;
+  lvl.start_y = 0;
+  lvl.limits_size = 1;
+  lvl.limits = calloc(lvl.limits_size, sizeof(limit));
+  lvl.limits[0].up = 0;
+  lvl.limits[0].left = 0;
+  lvl.limits[0].down = WINDOW_HEIGHT;
+  lvl.limits[0].right = WINDOW_WIDTH;
+  const limit current = lvl.limits[0];
+  return lvl;
+}
+
