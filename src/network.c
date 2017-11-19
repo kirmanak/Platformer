@@ -10,7 +10,11 @@ int receive_buffer(size_t size, unsigned char *const buffer, const int mysocket)
   return len;
 }
 
-const level ask_level(void) {
+void send_position (char *address, SDL_Rect rect) {
+
+}
+
+const level ask_level(char *address) {
   unsigned char *buffer = malloc(sizeof(level));
   int mysocket;
   struct sockaddr_in dest;
@@ -19,8 +23,7 @@ const level ask_level(void) {
 
   memset(&dest, 0, sizeof(dest)); // zero the struct
   dest.sin_family = AF_INET;
-  dest.sin_addr.s_addr = htonl(
-      INADDR_LOOPBACK); // set destination IP number - localhost, 127.0.0.1
+  dest.sin_addr.s_addr = inet_addr(address); // set destination IP
   dest.sin_port = htons(PORTNUM); // set destination port number
 
   connect(mysocket, (struct sockaddr *)&dest, sizeof(struct sockaddr_in));
@@ -35,7 +38,6 @@ const level ask_level(void) {
     return lvl;
   }
   level lvl = deserialize_level(buffer);
-  printf("Level is %d, %d, %d\n", lvl.start_x, lvl.start_y, lvl.limits_size); 
 
   // receive limits
   free(buffer);
@@ -45,7 +47,6 @@ const level ask_level(void) {
   lvl.limits = calloc(lvl.limits_size, sizeof(limit));
   for (int i = 0; i < lvl.limits_size; i++) {
     lvl.limits[i] = deserialize_limit(buffer + sizeof(limit) * i);
-    // printf("Limit is %d, %d, %d, %d\n", lvl.limits[i].up, lvl.limits[i].down, lvl.limits[i].right, lvl.limits[i].left); 
   }
 
   free(buffer);

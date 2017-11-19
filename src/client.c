@@ -6,14 +6,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-
-#include <serialize.h>
-#include <string.h>
-
 bool handle_event(const SDL_Event, input_condition *const);
 
-int main(const int argc, const char *const *const argv) {
-  const level current_level = ask_level();
+int main(int argc, char **argv) {
+  if (argc != 2) {
+   SDL_Log("Usage: ./game server_ip_address (for example, 127.0.0.1)"); 
+   return -1;
+  }
+  char *address = argv[1];
+  const level current_level = ask_level(address);
   if (current_level.start_x < -1 || current_level.start_y < 0
       || current_level.limits_size < 1 || current_level.limits == NULL) {
     SDL_Log("Could not connect to the server.\n");
@@ -101,6 +102,8 @@ int main(const int argc, const char *const *const argv) {
     }
     calculate_position(condition, &character_rectangle);
     check_bounds(current_level, &character_rectangle);
+
+    send_position(address, character_rectangle);
 
     // clear the window
     SDL_RenderClear(renderer);

@@ -5,6 +5,9 @@
 #include <main.h>
 #include <connect.h>
 
-const level ask_level(void);
+#include <SDL/SDL.h>
+
+const level ask_level(char *);
+void send_position(char *, SDL_Rect);
 
 #endif
