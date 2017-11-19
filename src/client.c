@@ -6,13 +6,24 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+
+#include <serialize.h>
+#include <string.h>
+
 bool handle_event(const SDL_Event, input_condition *const);
 
 int main(const int argc, const char *const *const argv) {
+  const level current_level = ask_level();
+  if (current_level.start_x < -1 || current_level.start_y < 0
+      || current_level.limits_size < 1 || current_level.limits == NULL) {
+    SDL_Log("Could not connect to the server.\n");
+    return 1;
+  }
+
   // initializing SDL
   if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
     SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
-    return 1;
+    return 2;
   }
 
   // creating window
@@ -23,7 +34,7 @@ int main(const int argc, const char *const *const argv) {
   if (!window) {
     SDL_Log("Unable to create window: %s", SDL_GetError());
     SDL_Quit();
-    return 2;
+    return 3;
   }
 
   // creating renderer
@@ -34,7 +45,7 @@ int main(const int argc, const char *const *const argv) {
     SDL_Log("Unable to create renderer: %s", SDL_GetError());
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 3;
+    return 4;
   }
 
   // loading character's sprite into memory
@@ -44,7 +55,7 @@ int main(const int argc, const char *const *const argv) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 4;
+    return 5;
   }
 
   // loading sprite into graphics hardware's memory
@@ -57,7 +68,7 @@ int main(const int argc, const char *const *const argv) {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
-    return 5;
+    return 6;
   }
 
   // struct to hold the position and size of the sprite
@@ -68,8 +79,6 @@ int main(const int argc, const char *const *const argv) {
                    &character_rectangle.h);
   character_rectangle.w = CHARACTER_WIDTH;
   character_rectangle.h = CHARACTER_HEIGHT;
-
-  level current_level = ask_level();
 
   // moving to the start position
   character_rectangle.x = current_level.start_x;

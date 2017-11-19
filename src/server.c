@@ -6,7 +6,7 @@
 
 int main(const int argc, const char *const *const argv) {
   unsigned char *buffer = calloc(1, sizeof(level));
-  serialize_level(buffer, generate_level());
+  level current_level = generate_level();
   struct sockaddr_in dest; /* socket info about the machine connecting to us */
   struct sockaddr_in serv; /* socket info about our server */
   int mysocket;            /* socket used to listen for incoming connections */
@@ -29,13 +29,21 @@ int main(const int argc, const char *const *const argv) {
   int consocket = accept(mysocket, (struct sockaddr *)&dest, &socksize);
 
   while (consocket) {
-    printf("Incoming connection from %s - sending welcome\n",
+    printf("Incoming connection from %s - sending level...\n",
             inet_ntoa(dest.sin_addr));
+    serialize_level(buffer, current_level);
     send(consocket, buffer, sizeof(level), 0);
+    buffer = calloc(current_level.limits_size, sizeof(limit));
+    for (int i = 0; i < current_level.limits_size; i++) {
+      serialize_limit(buffer + sizeof(limit) * i, current_level.limits[i]);
+    }
+    printf("Sending limits...\n");
+    send(consocket, buffer, sizeof(limit) * current_level.limits_size, 0);
     close(consocket);
     consocket = accept(mysocket, (struct sockaddr *)&dest, &socksize);
   }
 
+  free(current_level.limits);
   close(mysocket);
 }
 
