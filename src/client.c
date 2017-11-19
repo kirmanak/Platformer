@@ -1,6 +1,6 @@
 #include <main.h>
-#include <network.h>
 #include <structs.h>
+#include <network.h>
 #include <movement.h>
 
 #include <stdlib.h>
@@ -13,8 +13,8 @@ int main(int argc, char **argv) {
    SDL_Log("Usage: ./game server_ip_address (for example, 127.0.0.1)"); 
    return -1;
   }
-  char *address = argv[1];
-  const level current_level = ask_level(address);
+  const int server_socket = server_connect(argv[1]);
+  const level current_level = ask_level(server_socket);
   if (current_level.start_x < -1 || current_level.start_y < 0
       || current_level.limits_size < 1 || current_level.limits == NULL) {
     SDL_Log("Could not connect to the server.\n");
@@ -103,7 +103,12 @@ int main(int argc, char **argv) {
     calculate_position(condition, &character_rectangle);
     check_bounds(current_level, &character_rectangle);
 
-    send_position(address, character_rectangle);
+    client_condition cond;
+    cond.x = character_rectangle.x;
+    cond.y = character_rectangle.y;
+    cond.close = condition.close;
+
+    send_state(server_socket, cond);
 
     // clear the window
     SDL_RenderClear(renderer);

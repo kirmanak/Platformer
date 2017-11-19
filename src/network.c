@@ -10,12 +10,13 @@ int receive_buffer(size_t size, unsigned char *const buffer, const int mysocket)
   return len;
 }
 
-void send_position (char *address, SDL_Rect rect) {
-
+void send_state (const int mysocket, const client_condition cond) {
+ unsigned char *buffer = malloc(sizeof(cond)); 
+ send(mysocket, buffer, sizeof(int) * 2 + sizeof(bool), 0);
+ free(buffer);
 }
 
-const level ask_level(char *address) {
-  unsigned char *buffer = malloc(sizeof(level));
+const int server_connect (char *address) {
   int mysocket;
   struct sockaddr_in dest;
 
@@ -28,6 +29,11 @@ const level ask_level(char *address) {
 
   connect(mysocket, (struct sockaddr *)&dest, sizeof(struct sockaddr_in));
 
+  return mysocket;
+}
+
+const level ask_level(const int mysocket) {
+  unsigned char *buffer = malloc(sizeof(level));
   // receive level
   if (receive_buffer(sizeof(level), buffer, mysocket) <= 0) {
     level lvl;
@@ -53,3 +59,4 @@ const level ask_level(char *address) {
   close(mysocket);
   return lvl;
 }
+

@@ -4,6 +4,16 @@
 
 #include <stdlib.h>
 
+void serialize_client_condition (unsigned char *const buffer, const client_condition value) {
+  serialize_int(buffer, value.x);
+  serialize_int(buffer + sizeof(int), value.y);
+  serialize_bool(buffer + sizeof(int) * 2, value.close);
+}
+
+void serialize_bool(unsigned char *const buffer, const bool value) {
+  buffer[0] = value;
+}
+
 void serialize_int(unsigned char *const buffer, const int value) {
   buffer[0] = value >> 24;
   buffer[1] = value >> 16;
@@ -52,4 +62,17 @@ level deserialize_level(unsigned char *const buffer) {
   l.limits = NULL;
   return l;
 }
+
+bool deserialize_bool(unsigned char *const buffer) {
+  return buffer[0];
+}
+
+const client_condition deserialize_client_condition (unsigned char *const buffer) {
+  client_condition cond;
+  cond.x = deserialize_int(buffer);
+  cond.y = deserialize_int(buffer + sizeof(int));
+  cond.close = deserialize_bool(buffer + sizeof(int) * 2);
+  return cond;
+}
+
 

@@ -5,9 +5,9 @@
 #include <main.h>
 #include <connect.h>
 
-#include <SDL/SDL.h>
-
-const level ask_level(char *);
-void send_position(char *, SDL_Rect);
+const level ask_level(const int mysocket);
+void send_state (const int mysocket, const client_condition cond);
+const int server_connect (char *address);
+int receive_buffer(size_t, unsigned char *const, const int);
 
 #endif

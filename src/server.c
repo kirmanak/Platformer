@@ -3,28 +3,30 @@
 #include <server.h>
 
 #include <stdio.h>
+#include <sys/types.h>
+
+void forked_process(const int);
 
 int main(const int argc, const char *const *const argv) {
+  pid_t main_thread = getpid();
   unsigned char *buffer = calloc(1, sizeof(level));
   level current_level = generate_level();
-  struct sockaddr_in dest; /* socket info about the machine connecting to us */
-  struct sockaddr_in serv; /* socket info about our server */
-  int mysocket;            /* socket used to listen for incoming connections */
+  struct sockaddr_in dest; // socket info about the machine connecting to us
+  struct sockaddr_in serv; // socket info about our server
+  int mysocket;            // socket used to listen for incoming connections
   socklen_t socksize = sizeof(struct sockaddr_in);
 
-  memset(&serv, 0,
-         sizeof(serv));      /* zero the struct before filling the fields */
-  serv.sin_family = AF_INET; /* set the type of connection to TCP/IP */
-  serv.sin_addr.s_addr =
-      htonl(INADDR_ANY);          /* set our address to any interface */
-  serv.sin_port = htons(PORTNUM); /* set the server port number */
+  memset(&serv, 0, sizeof(serv)); // zero the struct before filling the fields
+  serv.sin_family = AF_INET; // set the type of connection to TCP/IP
+  serv.sin_addr.s_addr = htonl(INADDR_ANY); // set our address to any interface
+  serv.sin_port = htons(PORTNUM); // set the server port number
 
   mysocket = socket(AF_INET, SOCK_STREAM, 0);
 
-  /* bind serv information to mysocket */
+  // bind serv information to mysocket
   bind(mysocket, (struct sockaddr *)&serv, sizeof(struct sockaddr));
 
-  /* start listening, allowing a queue of up to 1 pending connection */
+  // start listening, allowing a queue of up to 1 pending connection
   listen(mysocket, 1);
   int consocket = accept(mysocket, (struct sockaddr *)&dest, &socksize);
 
@@ -33,18 +35,36 @@ int main(const int argc, const char *const *const argv) {
             inet_ntoa(dest.sin_addr));
     serialize_level(buffer, current_level);
     send(consocket, buffer, sizeof(level), 0);
+    free(buffer);
     buffer = calloc(current_level.limits_size, sizeof(limit));
     for (int i = 0; i < current_level.limits_size; i++) {
       serialize_limit(buffer + sizeof(limit) * i, current_level.limits[i]);
     }
     printf("Sending limits...\n");
     send(consocket, buffer, sizeof(limit) * current_level.limits_size, 0);
+    fork();
+    if (getpid() != main_thread) {
+      forked_process(consocket);
+    }
     close(consocket);
     consocket = accept(mysocket, (struct sockaddr *)&dest, &socksize);
   }
 
+  free(buffer);
   free(current_level.limits);
   close(mysocket);
+}
+
+void forked_process(const int consocket) {
+  size_t size = sizeof(client_condition);
+  unsigned char *buff = malloc(size);
+  // receive buffer with character position and process it 
+  while (true) {
+    receive_buffer(size, buff, consocket);
+    client_condition cond = deserialize_client_condition(buff);
+    if (cond.close) break;
+  }
+  free(buff);
 }
 
 const level generate_level(void) {

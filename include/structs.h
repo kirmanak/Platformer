@@ -25,4 +25,10 @@ typedef struct level {
   limit *limits;
 } level;
 
+typedef struct client_condition {
+  int x;
+  int y;
+  bool close;
+} client_condition;
+
 #endif 
