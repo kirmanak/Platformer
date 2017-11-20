@@ -7,9 +7,12 @@
 
 const level ask_level(int mysocket);
 
-void send_state(int mysocket, client_condition cond);
-const int server_connect (char *address);
+void send_state(int, client_condition);
 
-ssize_t receive_buffer(size_t, unsigned char *, int);
+const int server_connect(char *);
+
+int receive_int(int);
+
+client_condition receive_client(int);
 
 #endif

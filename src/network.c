@@ -1,17 +1,39 @@
 #include <network.h>
 #include <serialize.h>
 
-ssize_t receive_buffer(size_t size, unsigned char *const buffer, const int mysocket) {
-    ssize_t len = recv(mysocket, buffer, size, 0);
-    printf("Received %zi bytes.\n", len);
-  return len;
+void send_state (const int mysocket, const client_condition cond) {
+	unsigned char *buffer = malloc(sizeof(cond));
+	serialize_client_condition(buffer, cond);
+	send(mysocket, buffer, sizeof(int) * 2 + sizeof(bool), 0);
+	free(buffer);
 }
 
-void send_state (const int mysocket, const client_condition cond) {
-    unsigned char *buffer = malloc(sizeof(cond));
-    serialize_client_condition(buffer, cond);
-    send(mysocket, buffer, sizeof(int) * 2 + sizeof(bool), 0);
- free(buffer);
+int receive_int(const int mysocket) {
+	unsigned char *const buffer = malloc(sizeof(int));
+	if (recv(mysocket, buffer, sizeof(int), 0) >= 0) {
+		const int i = deserialize_int(buffer);
+		free(buffer);
+		return i;
+	} else {
+		free(buffer);
+		return INT32_MIN;
+	}
+}
+
+client_condition receive_client(const int mysocket) {
+	unsigned char *const buffer = malloc(sizeof(client_condition));
+	if (recv(mysocket, buffer, sizeof(client_condition), 0) >= 0) {
+		const client_condition cond = deserialize_client_condition(buffer);
+		free(buffer);
+		return cond;
+	} else {
+		free(buffer);
+		client_condition cond;
+		cond.x = -1;
+		cond.y = -1;
+		cond.close = true;
+		return cond;
+	}
 }
 
 const int server_connect (char *address) {
@@ -25,36 +47,31 @@ const int server_connect (char *address) {
   dest.sin_addr.s_addr = inet_addr(address); // set destination IP
   dest.sin_port = htons(PORTNUM); // set destination port number
 
-  connect(mysocket, (struct sockaddr *)&dest, sizeof(struct sockaddr_in));
-
-  return mysocket;
+	if (connect(mysocket, (struct sockaddr *) &dest, sizeof(struct sockaddr_in))) {
+		return -1;
+	} else {
+		return mysocket;
+	}
 }
 
 const level ask_level(const int mysocket) {
   unsigned char *buffer = malloc(sizeof(level));
   // receive level
-  if (receive_buffer(sizeof(level), buffer, mysocket) <= 0) {
-    level lvl;
-    lvl.start_x = -1;
-    lvl.start_y = -1;
-    lvl.limits_size = -1;
-    lvl.limits = NULL;
-    return lvl;
-  }
+	recv(mysocket, buffer, sizeof(level), 0);
   level lvl = deserialize_level(buffer);
+	free(buffer);
 
-  // receive limits
-  free(buffer);
-    buffer = calloc((size_t) lvl.limits_size, sizeof(limit));
-  receive_buffer(lvl.limits_size * sizeof(limit), buffer, mysocket);
+	// receive limits
+	const size_t limits_size = (size_t) lvl.limits_size * sizeof(limit);
+	buffer = malloc(limits_size);
+	recv(mysocket, buffer, limits_size, 0);
 
-    lvl.limits = calloc((size_t) lvl.limits_size, sizeof(limit));
+	lvl.limits = malloc(limits_size);
   for (int i = 0; i < lvl.limits_size; i++) {
     lvl.limits[i] = deserialize_limit(buffer + sizeof(limit) * i);
   }
 
   free(buffer);
-  close(mysocket);
   return lvl;
 }
 

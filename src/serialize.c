@@ -2,7 +2,7 @@
 
 #include <serialize.h>
 
-#include <stdlib.h>
+#include <stdio.h>
 
 void serialize_client_condition (unsigned char *const buffer, const client_condition value) {
   serialize_int(buffer, value.x);
@@ -45,7 +45,7 @@ int deserialize_int(const unsigned char *const buffer) {
   return i;
 }
 
-limit deserialize_limit(unsigned char *const buffer) {
+limit deserialize_limit(const unsigned char *const buffer) {
   limit l;
   l.up = deserialize_int(buffer);
   l.down = deserialize_int(buffer + sizeof(int) * 1);
@@ -54,7 +54,7 @@ limit deserialize_limit(unsigned char *const buffer) {
   return l;
 }
 
-level deserialize_level(unsigned char *const buffer) {
+level deserialize_level(const unsigned char *const buffer) {
   level l;
   l.start_x = deserialize_int(buffer);
   l.start_y = deserialize_int(buffer + sizeof(int) * 1);
@@ -63,11 +63,11 @@ level deserialize_level(unsigned char *const buffer) {
   return l;
 }
 
-bool deserialize_bool(unsigned char *const buffer) {
+bool deserialize_bool(const unsigned char *const buffer) {
   return buffer[0];
 }
 
-const client_condition deserialize_client_condition (unsigned char *const buffer) {
+client_condition deserialize_client_condition(const unsigned char *const buffer) {
   client_condition cond;
   cond.x = deserialize_int(buffer);
   cond.y = deserialize_int(buffer + sizeof(int));
