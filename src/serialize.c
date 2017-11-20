@@ -11,26 +11,26 @@ void serialize_client_condition (unsigned char *const buffer, const client_condi
 }
 
 void serialize_bool(unsigned char *const buffer, const bool value) {
-  buffer[0] = (unsigned char) value;
+	buffer[0] = (unsigned char) (value);
 }
 
 void serialize_int(unsigned char *const buffer, const int value) {
-  buffer[0] = (unsigned char) value >> 24;
-  buffer[1] = (unsigned char) value >> 16;
-  buffer[2] = (unsigned char) value >> 8;
-  buffer[3] = (unsigned char) value;
+	buffer[0] = (unsigned char) (value >> 24);
+	buffer[1] = (unsigned char) (value >> 16);
+	buffer[2] = (unsigned char) (value >> 8);
+	buffer[3] = (unsigned char) (value);
 }
 
 void serialize_limit(unsigned char *const buffer, const limit value) {
   serialize_int(buffer, value.up);
-  serialize_int(buffer + sizeof(int) * 1, value.down);
+	serialize_int(buffer + sizeof(int), value.down);
   serialize_int(buffer + sizeof(int) * 2, value.right);
   serialize_int(buffer + sizeof(int) * 3, value.left);
 }
 
 void serialize_level(unsigned char *const buffer, const level value) {
   serialize_int(buffer, value.start_x);
-  serialize_int(buffer + sizeof(int) * 1, value.start_y);
+	serialize_int(buffer + sizeof(int), value.start_y);
   serialize_int(buffer + sizeof(int) * 2, value.limits_size);
 }
 
@@ -48,7 +48,7 @@ int deserialize_int(const unsigned char *const buffer) {
 limit deserialize_limit(const unsigned char *const buffer) {
   limit l;
   l.up = deserialize_int(buffer);
-  l.down = deserialize_int(buffer + sizeof(int) * 1);
+	l.down = deserialize_int(buffer + sizeof(int));
   l.right = deserialize_int(buffer + sizeof(int) * 2);
   l.left = deserialize_int(buffer + sizeof(int) * 3);
   return l;
@@ -57,7 +57,7 @@ limit deserialize_limit(const unsigned char *const buffer) {
 level deserialize_level(const unsigned char *const buffer) {
   level l;
   l.start_x = deserialize_int(buffer);
-  l.start_y = deserialize_int(buffer + sizeof(int) * 1);
+	l.start_y = deserialize_int(buffer + sizeof(int));
   l.limits_size = deserialize_int(buffer + sizeof(int) * 2);
   l.limits = NULL;
   return l;

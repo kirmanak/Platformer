@@ -69,6 +69,10 @@ const level ask_level(const int mysocket) {
 	lvl.limits = malloc(limits_size);
   for (int i = 0; i < lvl.limits_size; i++) {
     lvl.limits[i] = deserialize_limit(buffer + sizeof(limit) * i);
+	  printf("Start position is (%d; %d), limit is (%d;%d;%d;%d)\n", lvl.start_x, lvl.start_y,
+	         lvl.limits[0].up, lvl.limits[0].down, lvl.limits[0].right,
+	         lvl.limits[0].left);
+
   }
 
   free(buffer);

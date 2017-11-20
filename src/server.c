@@ -44,7 +44,7 @@ int main(const int argc, const char *const *const argv) {
     send(consocket, buffer, sizeof(level), 0);
     free(buffer);
     buffer = calloc((size_t) current_level.limits_size, sizeof(limit));
-	  for (int i = 0; i <= current_level.limits_size; i++) {
+	  for (int i = 0; i < current_level.limits_size; i++) {
       serialize_limit(buffer + sizeof(limit) * i, current_level.limits[i]);
     }
     send(consocket, buffer, sizeof(limit) * current_level.limits_size, 0);
@@ -70,8 +70,11 @@ void send_clients(const int consocket) {
 	unsigned char *const serialized_cond = malloc(sizeof(client_condition));
 	serialize_int(serialized_n, n);
 	for (int i = 0; i < n; i++) {
-		send(consocket, serialized_n, sizeof(int), 0);
-		printf("Sent %d\n", n);
+		if (send(consocket, serialized_n, sizeof(int), 0) == -1) {
+			printf("Error during sending\n");
+		} else {
+			printf("Sent %d\n", n);
+		}
 		for (int j = 0; j < n; j++) {
 			if (sockets[i] == consocket) continue;
 			serialize_client_condition(serialized_cond, conditions[j]);
@@ -85,10 +88,7 @@ void forked_process(const int consocket) {
   unsigned char *buff = malloc(size);
 	// receive buffer with character position and process it
 	while (true) {
-		if (recv(consocket, buff, size, 0) <= 0) {
-			puts("I'm breaking.");
-			break;
-		}
+		if (recv(consocket, buff, size, 0) <= 0) break;
     client_condition cond = deserialize_client_condition(buff);
 		printf("Cond is %d, %d, %d\n", cond.x, cond.y, cond.close);
 		for (int i = 0; i < n; i++) {
@@ -97,6 +97,7 @@ void forked_process(const int consocket) {
 		}
 		// here sends to all clients
 		send_clients(consocket);
+		printf("I've sent all clients conditions to all clients.");
     if (cond.close) break;
   }
 	close(consocket);

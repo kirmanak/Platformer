@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 		return EXIT_SUCCESS;
 	}
 	// initializing SDL
-	if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+	if (SDL_Init(SDL_INIT_VIDEO)) {
 		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
 		return 2;
 	}
@@ -98,10 +98,6 @@ int main(int argc, char **argv) {
 	rects[0].x = current_level.start_x;
 	rects[0].y = current_level.start_y;
 
-	printf("Start position is (%d; %d), limit is (%d;%d;%d;%d)\n", current_level.start_x, current_level.start_y,
-	       current_level.limits[0].up, current_level.limits[0].down, current_level.limits[0].right,
-	       current_level.limits[0].left);
-
 	input_condition condition;
 
 	// key togglers
@@ -119,7 +115,7 @@ int main(int argc, char **argv) {
 
 		// processing events
 		for (SDL_Event event; SDL_PollEvent(&event);) {
-			handle_event(event, &condition);
+			if (!handle_event(event, &condition)) continue;
 
 			client_condition cond;
 			cond.x = rects[0].x;
