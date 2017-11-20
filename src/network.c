@@ -1,18 +1,16 @@
 #include <network.h>
 #include <serialize.h>
-#include <connect.h>
 
-#include <stdlib.h>
-
-int receive_buffer(size_t size, unsigned char *const buffer, const int mysocket) {
-  int len = recv(mysocket, buffer, size, 0);
-  printf("Received %d bytes.\n", len);
+ssize_t receive_buffer(size_t size, unsigned char *const buffer, const int mysocket) {
+    ssize_t len = recv(mysocket, buffer, size, 0);
+    printf("Received %zi bytes.\n", len);
   return len;
 }
 
 void send_state (const int mysocket, const client_condition cond) {
- unsigned char *buffer = malloc(sizeof(cond)); 
- send(mysocket, buffer, sizeof(int) * 2 + sizeof(bool), 0);
+    unsigned char *buffer = malloc(sizeof(cond));
+    serialize_client_condition(buffer, cond);
+    send(mysocket, buffer, sizeof(int) * 2 + sizeof(bool), 0);
  free(buffer);
 }
 
@@ -47,10 +45,10 @@ const level ask_level(const int mysocket) {
 
   // receive limits
   free(buffer);
-  buffer = calloc(lvl.limits_size, sizeof(limit));
+    buffer = calloc((size_t) lvl.limits_size, sizeof(limit));
   receive_buffer(lvl.limits_size * sizeof(limit), buffer, mysocket);
 
-  lvl.limits = calloc(lvl.limits_size, sizeof(limit));
+    lvl.limits = calloc((size_t) lvl.limits_size, sizeof(limit));
   for (int i = 0; i < lvl.limits_size; i++) {
     lvl.limits[i] = deserialize_limit(buffer + sizeof(limit) * i);
   }

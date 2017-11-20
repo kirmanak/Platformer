@@ -11,14 +11,14 @@ void serialize_client_condition (unsigned char *const buffer, const client_condi
 }
 
 void serialize_bool(unsigned char *const buffer, const bool value) {
-  buffer[0] = value;
+  buffer[0] = (unsigned char) value;
 }
 
 void serialize_int(unsigned char *const buffer, const int value) {
-  buffer[0] = value >> 24;
-  buffer[1] = value >> 16;
-  buffer[2] = value >> 8;
-  buffer[3] = value;
+  buffer[0] = (unsigned char) value >> 24;
+  buffer[1] = (unsigned char) value >> 16;
+  buffer[2] = (unsigned char) value >> 8;
+  buffer[3] = (unsigned char) value;
 }
 
 void serialize_limit(unsigned char *const buffer, const limit value) {
@@ -34,7 +34,7 @@ void serialize_level(unsigned char *const buffer, const level value) {
   serialize_int(buffer + sizeof(int) * 2, value.limits_size);
 }
 
-int deserialize_int(unsigned char *const buffer) {
+int deserialize_int(const unsigned char *const buffer) {
   int i = buffer[0];
   i = i << 8;
   i += buffer[1];

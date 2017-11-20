@@ -2,10 +2,7 @@
 #include <serialize.h>
 #include <server.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-
-void forked_process(const int);
+void forked_process(int);
 
 int main(const int argc, const char *const *const argv) {
   pid_t main_thread = getpid();
@@ -36,7 +33,7 @@ int main(const int argc, const char *const *const argv) {
     serialize_level(buffer, current_level);
     send(consocket, buffer, sizeof(level), 0);
     free(buffer);
-    buffer = calloc(current_level.limits_size, sizeof(limit));
+    buffer = calloc((size_t) current_level.limits_size, sizeof(limit));
     for (int i = 0; i < current_level.limits_size; i++) {
       serialize_limit(buffer + sizeof(limit) * i, current_level.limits[i]);
     }
@@ -59,8 +56,7 @@ void forked_process(const int consocket) {
   size_t size = sizeof(client_condition);
   unsigned char *buff = malloc(size);
   // receive buffer with character position and process it 
-  while (true) {
-    receive_buffer(size, buff, consocket);
+  while (receive_buffer(size, buff, consocket)) {
     client_condition cond = deserialize_client_condition(buff);
     if (cond.close) break;
   }
@@ -72,7 +68,7 @@ const level generate_level(void) {
   lvl.start_x = 0;
   lvl.start_y = 0;
   lvl.limits_size = 1;
-  lvl.limits = calloc(lvl.limits_size, sizeof(limit));
+  lvl.limits = calloc((size_t) lvl.limits_size, sizeof(limit));
   lvl.limits[0].up = 0;
   lvl.limits[0].left = 0;
   lvl.limits[0].down = WINDOW_HEIGHT;

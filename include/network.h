@@ -5,9 +5,11 @@
 #include <main.h>
 #include <connect.h>
 
-const level ask_level(const int mysocket);
-void send_state (const int mysocket, const client_condition cond);
+const level ask_level(int mysocket);
+
+void send_state(int mysocket, client_condition cond);
 const int server_connect (char *address);
-int receive_buffer(size_t, unsigned char *const, const int);
+
+ssize_t receive_buffer(size_t, unsigned char *, int);
 
 #endif

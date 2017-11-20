@@ -4,7 +4,8 @@
 #include <structs.h>
 #include <main.h>
 
-void calculate_position(const input_condition, SDL_Rect *const);
-void check_bounds(const level, SDL_Rect *const);
+void calculate_position(input_condition, SDL_Rect *);
+
+void check_bounds(level, SDL_Rect *);
 
 #endif

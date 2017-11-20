@@ -3,16 +3,24 @@
 
 #include <structs.h>
 
-void serialize_int(unsigned char *const, const int);
-void serialize_bool(unsigned char *const, const bool);
-void serialize_limit(unsigned char *const, const limit);
-void serialize_level(unsigned char *const, const level);
-void serialize_client_condition(unsigned char *const, const client_condition);
+void serialize_int(unsigned char *, int);
 
-int deserialize_int(unsigned char *const buffer);
-bool deserialize_bool(unsigned char *const buffer);
-limit deserialize_limit(unsigned char *const buffer);
-level deserialize_level(unsigned char *const buffer);
-client_condition deserialize_client_condition (unsigned char *const buffer);
+void serialize_bool(unsigned char *, bool);
+
+void serialize_limit(unsigned char *, limit);
+
+void serialize_level(unsigned char *, level);
+
+void serialize_client_condition(unsigned char *, client_condition);
+
+int deserialize_int(const unsigned char *);
+
+bool deserialize_bool(unsigned char *);
+
+limit deserialize_limit(unsigned char *);
+
+level deserialize_level(unsigned char *);
+
+client_condition deserialize_client_condition(unsigned char *);
 
 #endif

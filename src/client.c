@@ -3,10 +3,7 @@
 #include <network.h>
 #include <movement.h>
 
-#include <stdlib.h>
-#include <stdbool.h>
-
-bool handle_event(const SDL_Event, input_condition *const);
+bool handle_event(SDL_Event, input_condition *);
 
 int main(int argc, char **argv) {
   if (argc != 2) {
@@ -117,7 +114,7 @@ int main(int argc, char **argv) {
     SDL_RenderCopy(renderer, character_texture, NULL, &character_rectangle);
     SDL_RenderPresent(renderer);
     // wait 1/FPS of a second
-    SDL_Delay((double) 1000 / FPS);
+      SDL_Delay(1000 / FPS);
   }
 
   // closing program
@@ -154,7 +151,6 @@ bool handle_event(const SDL_Event event, input_condition *const condition) {
         default:
           return false;
       }
-      break;
     case SDL_KEYUP:
       switch (event.key.keysym.scancode) {
         case SDL_SCANCODE_W:
@@ -176,7 +172,6 @@ bool handle_event(const SDL_Event event, input_condition *const condition) {
         default:
           return false;
       }
-      break;
     default:
       return false;
   }
