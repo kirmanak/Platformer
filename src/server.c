@@ -31,7 +31,7 @@ int main(const int argc, const char *const *const argv) {
   bind(mysocket, (struct sockaddr *)&serv, sizeof(struct sockaddr));
 
   // start listening, allowing a queue of up to 1 pending connection
-  listen(mysocket, 1);
+	listen(mysocket, 5);
   int consocket = accept(mysocket, (struct sockaddr *)&dest, &socksize);
 
   while (consocket) {
@@ -71,6 +71,7 @@ void send_clients(const int consocket) {
 	serialize_int(serialized_n, n);
 	for (int i = 0; i < n; i++) {
 		send(consocket, serialized_n, sizeof(int), 0);
+		printf("Sent %d\n", n);
 		for (int j = 0; j < n; j++) {
 			if (sockets[i] == consocket) continue;
 			serialize_client_condition(serialized_cond, conditions[j]);
@@ -84,7 +85,10 @@ void forked_process(const int consocket) {
   unsigned char *buff = malloc(size);
 	// receive buffer with character position and process it
 	while (true) {
-		if (recv(consocket, buff, size, 0) <= 0) break;
+		if (recv(consocket, buff, size, 0) <= 0) {
+			puts("I'm breaking.");
+			break;
+		}
     client_condition cond = deserialize_client_condition(buff);
 		printf("Cond is %d, %d, %d\n", cond.x, cond.y, cond.close);
 		for (int i = 0; i < n; i++) {
